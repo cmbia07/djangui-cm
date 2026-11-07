@@ -17,7 +17,7 @@ async function invCharger(jeton){INV={jeton,etat:'charge',msg:'',attente:false};
 function invFermer(){INV=null;render()}
 function inviteUI(){const i=INV,a=i.attente?'disabled':'';let c;
 if(i.etat=='charge')c='<div class="mu">Vérification du lien…</div>';
-else if(i.etat=='invalide')c='<b class="no">Ce lien n’est plus valable</b><div class="mu">Il a déjà été utilisé, il a expiré ou il a été remplacé. Demandez un nouveau lien à la personne qui vous a invité(e).</div><button class="g" style="margin-top:8px" onclick="invFermer()">Continuer</button>';
+else if(i.etat=='invalide')c='<b class="no">Ce lien ne marche plus</b><div class="mu">Demandez à la personne qui gère votre réunion de vous en envoyer un nouveau. Vous n’avez pas besoin d’e-mail.</div><button class="g" style="margin-top:8px" onclick="invFermer()">Continuer</button>';
 else if(i.etat=='erreur')c=`<b class="no">Vérification impossible</b>${accMsgUI(i.msg)}<button style="margin-top:8px" onclick="invCharger(INV.jeton)">Réessayer</button>`;
 else c=`<div class="mu">Bonjour</div><h2 style="margin-top:2px">${esc(i.membre)}</h2><div class="mu">Vous êtes invité(e) à rejoindre la réunion :</div><div style="margin:4px 0 8px"><b>${esc(i.reunion)}</b></div>${accMsgUI(i.msg)}<button ${a} onclick="invRejoindre()">Rejoindre la réunion</button><div class="mu" style="margin-top:8px">Cet appareil sera rattaché à votre fiche. Aucune adresse e-mail n’est demandée.</div>`;
 ecran(`<div style="text-align:center">${logo(110)}</div><div class="c">${c}</div>`)}
