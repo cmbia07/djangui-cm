@@ -11,7 +11,8 @@ const ROLE_L={createur:'Créateur',president:'Président',bureau:'Bureau',redact
 const sbActif=()=>{try{return typeof window!='undefined'&&!(location.protocol=='file:'&&/[?&]local=1/.test(location.search))}catch(e){return false}};
 
 // Tables chargées à l'ouverture d'une réunion, avec un ordre stable pour lire page par page.
-const SB_TABLES=[['appartenances','utilisateur_id'],['paliers','id'],['membres','cree_le,id'],['membres_contacts','membre_id'],['montants_membre','membre_id,mois'],['aides_types','type'],['beneficiaires','mois,membre_id'],['partages_mois','mois'],['seances','mois'],['cotisations','mois,membre_id,type'],['presences','mois,membre_id'],['amendes','mois,id'],['amendes_levees','cle_auto'],['comptes_rendus','mois'],['caisse_entrees','mois,id'],['aides','mois,id'],['prets','mois,id'],['remboursements','mois,id'],['depots_banque','mois,id'],['votes_ouverts','mois,beneficiaire_id,votant_id'],['votes_anonymes_totaux','mois,beneficiaire_id']];
+const SB_TABLES=[['appartenances','utilisateur_id'],['paliers','id'],['membres','cree_le,id','id,reunion_id,utilisateur_id,palier_id,montant,sabbatique,retire_le,cree_le,nom_affiche,reglement_accepte_le,nom_choisi_le'],['membres_contacts','membre_id'],['montants_membre','membre_id,mois'],['aides_types','type'],['beneficiaires','mois,membre_id'],['partages_mois','mois'],['seances','mois'],['cotisations','mois,membre_id,type'],['presences','mois,membre_id'],['amendes','mois,id'],['amendes_levees','cle_auto'],['comptes_rendus','mois'],['caisse_entrees','mois,id'],['aides','mois,id'],['prets','mois,id'],['remboursements','mois,id'],['depots_banque','mois,id'],['votes_ouverts','mois,beneficiaire_id,votant_id'],['votes_anonymes_totaux','mois,beneficiaire_id'],['tours','numero'],['postes','poste'],['ordre_passage','mois,membre_id'],['versements','enregistre_le,id']];
+// La colonne membres.nom n'est pas lisible : les noms viennent de noms_membres(), qui ne donne le nom réel qu'à ceux qui ont le droit de le voir.
 
 // Convertit les lignes du serveur vers la forme utilisée par l'application (mois numérotés depuis le début de la période).
 function versPrototype(re,d){
@@ -25,7 +26,7 @@ r.tiers=t('paliers').map(x=>({id:x.id,n:x.nom,a:+x.montant}));
 const tel={},hist={};for(const x of t('membres_contacts'))tel[x.membre_id]=x.telephone;
 for(const x of t('montants_membre'))(hist[x.membre_id]=hist[x.membre_id]||[]).push({m:mi(x.mois),a:+x.montant});
 for(const k in hist)hist[k].sort((a,b)=>a.m-b.m);
-for(const x of t('membres')){const h=hist[x.id]||[];if(x.retire_le){r.anc.push({id:x.id,n:x.nom,c:+x.montant||0,h});continue}const m={id:x.id,n:x.nom,c:+x.montant||0,tr:x.palier_id||'',h};if(tel[x.id])m.t=tel[x.id];if(x.utilisateur_id)m.u=x.utilisateur_id;r.mem.push(m);if(x.sabbatique)r.sab[x.id]=true}
+for(const x of t('membres')){const h=hist[x.id]||[];if(x.retire_le){r.anc.push({id:x.id,n:x.nom,c:+x.montant||0,h});continue}const m={id:x.id,n:x.nom,c:+x.montant||0,tr:x.palier_id||'',h,nr:x.nom_reel||null,ra:x.reglement_accepte_le||null,nc:x.nom_choisi_le||null};if(tel[x.id])m.t=tel[x.id];if(x.utilisateur_id)m.u=x.utilisateur_id;r.mem.push(m);if(x.sabbatique)r.sab[x.id]=true}
 for(const a of t('appartenances')){if(a.role=='redacteur')r.w.push(a.utilisateur_id);if(a.role=='president'){const f=r.mem.find(m=>m.u==a.utilisateur_id);if(f)r.bu.pres=f.id}}
 const pr={egal:'p',prorata:'w',total:'c'},st={present:'p',retard:'r',absent:'a'};
 for(const x of t('aides_types'))r.ai[x.type]={on:!!x.actif,a:+x.montant};
@@ -45,20 +46,22 @@ r.bd=t('depots_banque').map(x=>({id:x.id,mid:x.membre_id,m:mi(x.mois),a:+x.monta
 for(const x of t('votes_anonymes_totaux'))r.vat[mi(x.mois)+'-'+x.beneficiaire_id]={y:+x.a_la_hauteur,n:+x.pas_a_la_hauteur,who:[]};
 const vo={};for(const x of t('votes_ouverts')){const q=vo[x.votant_id]=vo[x.votant_id]||{rid:re.id,mid:x.votant_id,v:{}};q.v[mi(x.mois)+'-'+x.beneficiaire_id]=!!x.a_la_hauteur}
 r.votes=Object.values(vo);
+r.reglement=re.reglement||'';r.desc=re.description||'';r.lotA={tours:t('tours'),postes:t('postes'),ordre:t('ordre_passage'),versements:t('versements')};
 return r}
 
 // Le serveur renvoie 1000 lignes au plus par requête : une grande réunion doit être lue page par page.
-async function sbTout(table,ordre,id){const pas=1000;let o=[],de=0;for(;;){let q=SB.from(table).select('*').eq('reunion_id',id);for(const c of ordre.split(','))q=q.order(c);const {data,error}=await q.range(de,de+pas-1);if(error)throw error;o=o.concat(data||[]);if(!data||data.length<pas)return o;de+=pas}}
+async function sbTout(table,ordre,id,cols){const pas=1000;let o=[],de=0;for(;;){let q=SB.from(table).select(cols||'*').eq('reunion_id',id);for(const c of ordre.split(','))q=q.order(c);const {data,error}=await q.range(de,de+pas-1);if(error)throw error;o=o.concat(data||[]);if(!data||data.length<pas)return o;de+=pas}}
 const sbSquelette=x=>({id:x.reunion_id||x.id,n:x.nom||x.n,dv:x.monnaie||x.dv,off:x.suspendue!==undefined?x.suspendue:x.off,role:x.role,pin:x.pin,mem:[],cot:{},be:{},en:[],fi:[],am:[],no:{},w:[]});
 
 async function sbListe(){const {data,error}=await SB.rpc('mes_reunions');if(error)throw error;S={r:(data||[]).map(sbSquelette),cur:null};VT=[];LISTE=true;MOI=null;ACCL=null;ACCC=null}
 
 // Seule la réunion choisie est chargée ; les données de la précédente sont oubliées.
-async function sbOuvrir(id){const av=S.r.find(x=>x.id==id)||{},role=av.role;ERR='';ACCL=null;ACCC=null;CONX.attente=true;render();try{
+async function sbOuvrir(id){const av=S.r.find(x=>x.id==id)||{},role=av.role;ERR='';ACCL=null;ACCC=null;BIENV=null;CONX.attente=true;render();try{
 const {data:re,error}=await SB.from('reunions').select('*').eq('id',id).maybeSingle();if(error)throw error;
 // Refus du serveur : accès retiré, ou PIN à saisir de nouveau. La liste à jour dit lequel.
 if(!re){await sbListe();const x=S.r.find(y=>y.id==id);if(pinRequis(x))PINV={id,msg:'',attente:false};else ERR='Réunion introuvable ou accès refusé.';return}
-const d={};await Promise.all(SB_TABLES.map(async([t,o])=>{d[t]=await sbTout(t,o,id)}));
+const d={};await Promise.all(SB_TABLES.map(async([t,o,c])=>{d[t]=await sbTout(t,o,id,c)}));
+const nms=await SB.rpc('noms_membres',{r:id});if(nms.error)throw nms.error;const nmx={};for(const x of nms.data||[])nmx[x.membre_id]=x;for(const x of d.membres){const y=nmx[x.id]||{};x.nom=y.nom_affiche||'Membre';x.nom_reel=y.nom_reel||null}
 const j=await SB.from('journal').select('*').eq('reunion_id',id).order('quand',{ascending:false}).limit(25);if(j.error)throw j.error;
 const r=versPrototype(re,d);r.role=role;r.pin=av.pin;await accCharger(r);
 // Les profils des autres ne sont plus lisibles : l'auteur se retrouve par sa fiche dans la réunion.
