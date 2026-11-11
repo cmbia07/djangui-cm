@@ -11,7 +11,7 @@ const ROLE_L={createur:'Créateur',president:'Président',bureau:'Bureau',redact
 const sbActif=()=>{try{return typeof window!='undefined'&&!(location.protocol=='file:'&&/[?&]local=1/.test(location.search))}catch(e){return false}};
 
 // Tables chargées à l'ouverture d'une réunion, avec un ordre stable pour lire page par page.
-const SB_TABLES=[['appartenances','utilisateur_id'],['paliers','id'],['membres','cree_le,id','id,reunion_id,utilisateur_id,palier_id,montant,sabbatique,retire_le,cree_le,nom_affiche,reglement_accepte_le,nom_choisi_le'],['membres_contacts','membre_id'],['montants_membre','membre_id,mois'],['aides_types','type'],['beneficiaires','mois,membre_id'],['partages_mois','mois'],['seances','mois'],['cotisations','mois,membre_id,type'],['presences','mois,membre_id'],['amendes','mois,id'],['amendes_levees','cle_auto'],['comptes_rendus','mois'],['caisse_entrees','mois,id'],['aides','mois,id'],['prets','mois,id'],['remboursements','mois,id'],['depots_banque','mois,id'],['votes_ouverts','mois,beneficiaire_id,votant_id'],['votes_anonymes_totaux','mois,beneficiaire_id'],['tours','numero'],['postes','poste'],['ordre_passage','mois,membre_id'],['versements','enregistre_le,id']];
+const SB_TABLES=[['appartenances','utilisateur_id'],['paliers','id'],['membres','cree_le,id','id,reunion_id,utilisateur_id,palier_id,montant,sabbatique,retire_le,cree_le,nom_affiche,reglement_accepte_le,nom_choisi_le'],['membres_contacts','membre_id'],['montants_membre','membre_id,mois'],['aides_types','type'],['beneficiaires','mois,membre_id'],['partages_mois','mois'],['seances','mois'],['cotisations','mois,membre_id,type'],['presences','mois,membre_id'],['amendes','mois,id'],['amendes_levees','cle_auto'],['comptes_rendus','mois'],['caisse_entrees','mois,id'],['aides','mois,id'],['prets','mois,id'],['remboursements','mois,id'],['depots_banque','mois,id'],['votes_ouverts','mois,beneficiaire_id,votant_id'],['votes_anonymes_totaux','mois,beneficiaire_id'],['tours','numero'],['postes','poste'],['ordre_passage','mois,membre_id'],['versements','enregistre_le,id'],['demandes_retrait','cree_le,id'],['reponses_retrait','repondu_le,demande_id,membre_id']];
 // La colonne membres.nom n'est pas lisible : les noms viennent de noms_membres(), qui ne donne le nom réel qu'à ceux qui ont le droit de le voir.
 
 // Convertit les lignes du serveur vers la forme utilisée par l'application (mois numérotés depuis le début de la période).
@@ -46,7 +46,7 @@ r.bd=t('depots_banque').map(x=>({id:x.id,mid:x.membre_id,m:mi(x.mois),a:+x.monta
 for(const x of t('votes_anonymes_totaux'))r.vat[mi(x.mois)+'-'+x.beneficiaire_id]={y:+x.a_la_hauteur,n:+x.pas_a_la_hauteur,who:[]};
 const vo={};for(const x of t('votes_ouverts')){const q=vo[x.votant_id]=vo[x.votant_id]||{rid:re.id,mid:x.votant_id,v:{}};q.v[mi(x.mois)+'-'+x.beneficiaire_id]=!!x.a_la_hauteur}
 r.votes=Object.values(vo);
-r.reglement=re.reglement||'';r.desc=re.description||'';r.lotA={tours:t('tours'),postes:t('postes'),ordre:t('ordre_passage'),versements:t('versements')};
+r.reglement=re.reglement||'';r.desc=re.description||'';r.lotA={tours:t('tours'),postes:t('postes'),ordre:t('ordre_passage'),versements:t('versements'),retraits:t('demandes_retrait'),reponses:t('reponses_retrait')};
 return r}
 
 // Le serveur renvoie 1000 lignes au plus par requête : une grande réunion doit être lue page par page.
