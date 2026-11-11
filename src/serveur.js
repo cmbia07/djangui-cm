@@ -37,7 +37,7 @@ for(const x of t('cotisations')){const k=mi(x.mois)+'-'+x.membre_id;if(x.type=='
 for(const x of t('presences')){const k=mi(x.mois)+'-'+x.membre_id;r.at[k]=st[x.statut];if(x.statut!='present')r.lt[k]={h:+x.heures_retard||1,ag:!!x.agent_envoye,ex:!!x.excuse,t:hm(x.heure_arrivee)}}
 r.fi=t('amendes').map(x=>{const o={id:x.id,mid:x.membre_id,l:x.motif,a:+x.montant,m:mi(x.mois),p:!!x.payee};if(x.cle_auto)o.auto=x.cle_auto;return o});
 for(const x of t('amendes_levees'))r.wv[x.cle_auto]=true;
-for(const x of t('comptes_rendus')){const m=mi(x.mois);if(x.deroule)r.no[m]=x.deroule;if(x.decisions||x.a_suivre)r.cr[m]={d:x.decisions||'',n:x.a_suivre||''}}
+for(const x of t('comptes_rendus')){const m=mi(x.mois);if(x.deroule)r.no[m]=x.deroule;if(x.decisions||x.a_suivre||x.modifie_le)r.cr[m]={d:x.decisions||'',n:x.a_suivre||''};if(x.modifie_le){const p=t('membres').find(y=>y.id==x.modifie_par);r.cr[m].a=(p&&p.nom)||'le créateur';r.cr[m].ts=Date.parse(x.modifie_le)}}
 r.en=t('caisse_entrees').map(x=>({id:x.id,l:x.motif,a:+x.montant,m:mi(x.mois)}));
 r.am=t('aides').map(x=>({id:x.id,mid:x.membre_id,t:x.type,a:+x.montant,m:mi(x.mois)}));
 const rb={};for(const x of t('remboursements'))(rb[x.pret_id]=rb[x.pret_id]||[]).push(mi(x.mois));

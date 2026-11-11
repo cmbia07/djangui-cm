@@ -4,7 +4,7 @@ function addFi(){const r=R(),a=+v('fa');if(!r.mem.length||!a)return;r.fi.push({i
 function addAm(){const r=R(),a=+v('aa');if(!r.mem.length||!a)return;r.am.push({id:uid(),mid:v('am'),t:v('at'),a,m:mo});DET='Aide '+AID[v('at')][0]+' de '+f(a)+' pour '+nmT(r,v('am'));save();render()}
 function del(k,id){const r=R();const x=r[k].find(y=>y.id==id)||{};if(k=='fi'&&x.auto){r.wv=r.wv||{};r.wv[x.auto]=true}DET='Supprimé : '+({en:'entrée de caisse',fi:'amende',am:'aide',lo:'prêt'}[k]||k)+' de '+f(x.a);r[k]=r[k].filter(x=>x.id!=id);save();render()}
 function payFi(id){const x=R().fi.find(x=>x.id==id);x.p=!x.p;DET='Amende de '+nmT(R(),x.mid)+' : '+(x.p?'payée':'impayée');save();render()}
-function note(m,t){R().no[m]=t;DET='Note de séance modifiée';save()}
+function note(m,t){const r=R();r.no[m]=t;DET='Note de séance modifiée';txCompteRendu(r,m,'t');save()}
 const adv=k=>aidAmt(R()||{},k);function aidDef(){document.getElementById('aa').value=adv(document.getElementById('at').value)}
 function aidSetUI(r){return `<h2>Aides</h2><div class="c"><div class="mu">Activez les aides de votre réunion et fixez le montant de chacune.</div>${Object.entries(AID).map(([k,x])=>`<div class="r"><label><input type="checkbox" style="width:auto" ${aidOn(r,k)?'checked':''} onchange="setAid('${k}','on',this.checked)"> ${x[0]}</label><input type="number" inputmode="numeric" style="width:130px" placeholder="Montant" value="${aidAmt(r,k)}" onchange="setAid('${k}','a',this.value)"></div>`).join('')}</div>`}
 function setAid(k,fld,val){const r=R();r.ai=r.ai||{};r.ai[k]=r.ai[k]||{};if(fld=='on')r.ai[k].on=!!val;else r.ai[k].a=Math.max(0,+val||0);DET='Aide '+AID[k][0]+' : '+(fld=='on'?(val?'activée':'désactivée'):'montant '+f(+val||0));save();render()}

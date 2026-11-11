@@ -14,5 +14,5 @@ function curUI(r){return `<h2>Réglages de la réunion</h2><div class="c"><div c
 function setCc(v){R().cc=String(v).replace(/\D/g,'')||'237';DET='Indicatif pays changé : +'+R().cc;save();render()}
 function setName(v){v=String(v).trim();if(!v)return;const r=R();r.n=v;DET='Nom changé : '+v;save();render()}
 function setHp(){const r=R();r.hp=(r.hp===false);DET='Numéros de téléphone : '+(r.hp===false?'visibles par tous':'visibles par le bureau seulement');save();render()}
-function setCf(val){R().cf=val;DET='Règles de confidentialité modifiées';save()}
+function setCf(val){const r=R();r.cf=val;DET='Règles de confidentialité modifiées';txConfidentialite(r);save()}
 function privUI(r){return `<h2>Confidentialité</h2><div class="c"><div class="mu">Ces règles sont envoyées avec le message de bienvenue aux nouveaux membres.</div><button class="${r.hp===false?'g':''}" style="margin-top:8px" onclick="setHp()">${r.hp===false?'Numéros visibles par tous':'Numéros visibles par le bureau seulement ✓'}</button><div class="mu" style="margin-top:8px">Texte des règles (laisser vide pour le texte proposé)</div><textarea rows="6" placeholder="${esc(cfDef())}" oninput="setCf(this.value)">${esc(r.cf||'')}</textarea></div>`}
